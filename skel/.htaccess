@@ -1,0 +1,32 @@
+<IfModule mod_rewrite.c>
+	# Turn rewriting on
+	RewriteEngine on
+	
+	# Set the base location - It is assumed the assets folder is located
+	# in the root of the web server document root. If not this would need to be
+	# changed. Along with some other hard coded paths. So I would advise
+	# leaving it in the root of your project. Maybe one day I will make this
+	# more configuarable...
+	RewriteBase /assets/
+	
+	# If the files don't already exist, lets use PHP to create them.
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^(.*)$ min.php?$1 [QSA,L]
+	
+	# If the browser accepts gzip and the requested file exists with
+	# a .gz appended, then rewrite the request to the .gz file
+	RewriteCond %{HTTP:Accept-Encoding} gzip
+	RewriteCond %{REQUEST_FILENAME}.gz -f
+	RewriteRule (.*\.(css|js))$ $1\.gz [L]
+	
+	# But then we need to reset the Content-Type and Content-Encoding headers.
+	<FilesMatch ".*\.js\.gz$">
+		ForceType application/x-javascript
+		Header set Content-Encoding gzip
+	</FilesMatch>
+	<FilesMatch ".*\.css\.gz$">
+		ForceType text/css
+		Header set Content-Encoding gzip
+	</FilesMatch>
+</IfModule>
