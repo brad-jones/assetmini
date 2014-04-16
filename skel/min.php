@@ -11,6 +11,15 @@
 // -----------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+// Grab the query string
+$query = urldecode($_SERVER['QUERY_STRING']);
+
+// Extract the json portion
+$json_string = Gears\String\Between($query, 'cache/', '.min');
+
+print_r($json_string);
+exit;
+
 // Do we have a request
 if (isset($_GET['request']))
 {
