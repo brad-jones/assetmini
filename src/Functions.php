@@ -28,5 +28,9 @@ function LessCompile($input, $import_dir)
 	$parser = new \Less_Parser();
 	$parser->SetImportDirs(array($import_dir => ''));
 	$parser->parse($input);
-	return $parser->getCss();
+	return array
+	(
+		'css' => $parser->getCss(),
+		'imported-files' => $parser->allParsedFiles()
+	);
 }

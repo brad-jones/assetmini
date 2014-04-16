@@ -111,10 +111,16 @@ if (($files = json_decode($json_string, true)) !== null)
 				$hashes[$assetfilename_less] = md5($data);
 				
 				// Compile the less first
-				$css = Gears\AssetMini\LessCompile($data, $base_dir.'/css');
+				$less = Gears\AssetMini\LessCompile($data, $base_dir.'/css');
+				
+				// Loop through the imported files and add them to our hashes
+				foreach ($less['imported-files'] as $imported)
+				{
+					$hashes[$imported] = md5(file_get_contents($imported));
+				}
 				
 				// Minify it
-				$output .= $mini($css);
+				$output .= $mini($less['css']);
 			}
 			else
 			{
