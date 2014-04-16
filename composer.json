@@ -1,0 +1,20 @@
+{
+	"name": "gears/assetmini",
+	"description": "PHP based js and css asset minification.",
+	"homepage": "https://github.com/phpgearbox/assetmini",
+	"keywords": ["minification", "javascript", "stylesheets", "css"],
+	"license": "MIT",
+	"require": 
+	{
+		"php": ">=5.3",
+		"tedivm/jshrink": "v0.5.2",
+		"natxet/CssMin": "3.0.2"
+	},
+	"autoload":
+	{
+		"psr-4":
+		{
+			"Gears\\AssetMini\\": "src/"
+		}
+	}
+}
