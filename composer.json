@@ -8,6 +8,7 @@
 	"require": 
 	{
 		"php": ">=5.3",
+		"gears/installer": "dev-master",
 		"tedivm/jshrink": "v0.5.2",
 		"natxet/CssMin": "3.0.2"
 	},
