@@ -66,6 +66,15 @@ if (($files = json_decode($json_string, true)) !== null)
 	 */
 	if (!file_exists($group_min))
 	{
+		// Clean up any old builds
+		foreach(scandir($base_dir.'/cache') as $file)
+		{
+			if (strpos($file, substr($hash_name, 0, -1)) !== false)
+			{
+				unlink($base_dir.'/cache/'.$file);
+			}
+		}
+		
 		// This will contain a list of hashes for each file we minify.
 		$hashes = array();
 		
@@ -78,6 +87,9 @@ if (($files = json_decode($json_string, true)) !== null)
 			// Create the full asset file name
 			$assetfilename = $base_dir.'/'.$type.'/'.$file.'.'.$type;
 			
+			// It's possible the file exists as a LESS file
+			$assetfilename_less = str_replace('.css', '.less', $assetfilename);
+			
 			// Does it exist
 			if (file_exists($assetfilename))
 			{
@@ -89,6 +101,27 @@ if (($files = json_decode($json_string, true)) !== null)
 				
 				// Minify it
 				$output .= $mini($data);
+			}
+			elseif(file_exists($assetfilename_less))
+			{
+				// Read the file
+				$data = file_get_contents($assetfilename_less);
+				
+				// Grab the hash
+				$hashes[$assetfilename_less] = md5($data);
+				
+				// Compile the less first
+				$css = Gears\AssetMini\LessCompile($data, $base_dir.'/css');
+				
+				// Minify it
+				$output .= $mini($css);
+			}
+			else
+			{
+				// It doesn't so error out
+				header("HTTP/1.1 500 Internal Server Error");
+				echo 'Asset Does Not Exist: '.$assetfilename;
+				exit;
 			}
 		}
 		

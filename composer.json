@@ -11,7 +11,8 @@
 		"gears/installer": "x",
 		"gears/string": "x",
 		"tedivm/jshrink": "v0.5.2",
-		"natxet/CssMin": "3.0.2"
+		"natxet/CssMin": "3.0.2",
+		"oyejorge/less.php": "~1.5"
 	},
 	"autoload":
 	{
