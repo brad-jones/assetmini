@@ -4,6 +4,7 @@
 	"homepage": "https://github.com/phpgearbox/assetmini",
 	"keywords": ["minification", "javascript", "stylesheets", "css"],
 	"license": "MIT",
+	"type": "gears-assetmini",
 	"require": 
 	{
 		"php": ">=5.3",
@@ -16,9 +17,5 @@
 		{
 			"Gears\\AssetMini\\": "src/"
 		}
-	},
-	"scripts":
-	{
-		"post-install-cmd": "Gears\\AssetMini\\Installer::post_install_cmd"
 	}
 }
