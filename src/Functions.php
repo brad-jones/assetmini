@@ -13,10 +13,12 @@
 
 namespace Gears\AssetMini;
 
-class ViewHelper
+function JsMin($input)
 {
-	public function __construct()
-	{
-		echo 'Hello';
-	}
+	return \JShrink\Minifier::minify($input);
+}
+
+function CssMin($input)
+{
+	return \CssMin::minify($input);
 }

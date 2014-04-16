@@ -11,40 +11,51 @@
 // -----------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
+// Include composer
+require('../vendor/autoload.php');
+
+// Define our base directory
+$base_dir = realpath(dirname(__FILE__));
+
+// Is our cache dir writeable
+if (!is_writable($base_dir.'/cache'))
+{
+	header("HTTP/1.1 500 Internal Server Error");
+	echo 'Invalid Query: cant write to cache dir';
+	exit;
+}
+
 // Grab the query string
 $query = urldecode($_SERVER['QUERY_STRING']);
 
 // Extract the json portion
 $json_string = Gears\String\Between($query, 'cache/', '.min');
 
-print_r($json_string);
-exit;
-
-// Do we have a request
-if (isset($_GET['request']))
+// Attempt to parse it
+if (($files = json_decode($json_string, true)) !== null)
 {
 	// This is what we will output
 	$output = '';
 	
-	// Define our base directory
-	$base_dir = realpath(dirname(__FILE__));
-
-	// Parse the request
-	$info = pathinfo($_GET['request']);
-	$type = $info['extension'];
-	$files = explode(',', str_replace('.min', '', $info['filename']));
-	$time = array_pop($files);
-	$classname = $type.'min';
+	// What is the type of file we are generating?
+	$type = pathinfo($query);
+	$type = $type['extension'];
 	
-	// Create the group name
-	$group = '';
-	foreach ($files as $file) $group .= $file.',';
-	$group = substr($group, 0, -1);
+	// Get the time - this helps us invalidate the cache
+	$time = array_pop($files);
+	
+	// Create the hash name
+	$hash_name = '[';
+	foreach ($files as $file) $hash_name .= '"'.$file.'",';
+	$hash_name = substr($hash_name, 0, -1).']';
 	
 	// Create some file names
-	$group_hash = $base_dir.'/'.$type.'/'.$group.'.hash';
-	$group_min = $base_dir.'/'.$type.'/'.$info['filename'].'.'.$type;
+	$group_hash = $base_dir.'/cache/'.$hash_name.'.hash';
+	$group_min = $base_dir.'/cache/'.$json_string.'.min.'.$type;
 	$group_gz = $group_min.'.gz';
+	
+	// What is the function name we will use to minify this asset
+	$mini = 'Gears\AssetMini\\'.ucfirst($type).'Min';
 	
 	/*
 	 * Check to see if the group file already exists
@@ -55,27 +66,17 @@ if (isset($_GET['request']))
 	 */
 	if (!file_exists($group_min))
 	{
-		// Clean up any old builds
-		foreach(scandir($base_dir.'/'.$type) as $file)
-		{
-			if (strpos($file, '.min'))
-			{
-				unlink($base_dir.'/'.$type.'/'.$file);
-			}
-		}
-		
 		// This will contain a list of hashes for each file we minify.
 		$hashes = array();
-		
-		// We might need this later on
-		$less = new lessc(); $less->setImportDir([$base_dir.'/css']);
 		
 		// Loop through the files that make up this group
 		foreach ($files as $file)
 		{
+			// Replace any dots in the file name with directory separators
+			$file = str_replace('.', DIRECTORY_SEPARATOR, $file);
+			
 			// Create the full asset file name
 			$assetfilename = $base_dir.'/'.$type.'/'.$file.'.'.$type;
-			$assetfilename_less = $base_dir.'/'.$type.'/'.$file.'.less';
 			
 			// Does it exist
 			if (file_exists($assetfilename))
@@ -87,46 +88,27 @@ if (isset($_GET['request']))
 				$hashes[$assetfilename] = md5($data);
 				
 				// Minify it
-				if ($time != 'debug') $output .= $classname::mini($data);
-				else $output .= $data;
-			}
-			elseif (file_exists($assetfilename_less))
-			{
-				// Read the file
-				$data = file_get_contents($assetfilename_less);
-				
-				// Grab the hash
-				$hashes[$assetfilename_less] = md5($data);
-				
-				// Compile the css
-				$data = $less->compile($data);
-				
-				// Minify it
-				if ($time != 'debug') $output .= $classname::mini($data);
-				else $output .= $data;
+				$output .= $mini($data);
 			}
 		}
 		
-		if ($time != 'debug')
-		{
-			// Compress the minfied data
-			$output_gz = gzencode($output);
-			
-			// Cache the minfied version
-			file_put_contents($group_min, $output);
-			
-			// Cache a gzipped version as well
-			file_put_contents($group_gz, $output_gz);
-			
-			// Create a hash file so we can easily detect
-			// when the cache is no longer valid
-			file_put_contents($group_hash, json_encode($hashes));
-			
-			// Make sure all files have the same time
-			touch($group_hash, $time);
-			touch($group_min, $time);
-			touch($group_gz, $time);
-		}
+		// Compress the minfied data
+		$output_gz = gzencode($output);
+		
+		// Cache the minfied version
+		file_put_contents($group_min, $output);
+		
+		// Cache a gzipped version as well
+		file_put_contents($group_gz, $output_gz);
+		
+		// Create a hash file so we can easily detect
+		// when the cache is no longer valid
+		file_put_contents($group_hash, json_encode($hashes));
+		
+		// Make sure all files have the same time
+		touch($group_hash, $time);
+		touch($group_min, $time);
+		touch($group_gz, $time);
 	}
 	else
 	{
@@ -140,7 +122,7 @@ if (isset($_GET['request']))
 	if ($type == 'js') header('Content-type: text/javascript;');
 	
 	// Does the browser support gzip?
-	if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false && $time != 'debug')
+	if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false)
 	{
 		// We may as well return the gzipped data we just created.
 		header('Vary: Accept-Encoding');
@@ -157,4 +139,9 @@ if (isset($_GET['request']))
 	
 	// Output the minfied asset
 	echo $content;
+}
+else
+{
+	header("HTTP/1.1 500 Internal Server Error");
+	echo 'Invalid Query: bad json';
 }
