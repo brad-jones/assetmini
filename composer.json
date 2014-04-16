@@ -16,5 +16,9 @@
 		{
 			"Gears\\AssetMini\\": "src/"
 		}
+	},
+	"scripts":
+	{
+		"post-install-cmd": "Gears\\AssetMini\\Installer::post_install_cmd"
 	}
 }
