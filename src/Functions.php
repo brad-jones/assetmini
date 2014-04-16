@@ -25,7 +25,7 @@ function CssMin($input)
 
 function LessCompile($input, $import_dir)
 {
-	$parser = new Less_Parser();
+	$parser = new \Less_Parser();
 	$parser->SetImportDirs(array($import_dir => ''));
 	$parser->parse($input);
 	return $parser->getCss();
