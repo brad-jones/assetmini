@@ -11,11 +11,29 @@
 // -----------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-// Include composer
-require('../vendor/autoload.php');
-
 // Define our base directory
 $base_dir = realpath(dirname(__FILE__));
+
+// Include composer
+$composer_loaded = false;
+$dir = $base_dir;
+do
+{
+	if(file_exists($dir.'/vendor/autoload.php'))
+	{
+		require($dir'/autoload.php');
+		$composer_loaded = true;
+	}
+}
+while($dir = realpath("$dir/.."));
+
+// Did we manage to include composer okay
+if (!$composer_loaded)
+{
+	header("HTTP/1.1 500 Internal Server Error");
+	echo 'Missing Composer: we cant find composer, please check your install';
+	exit;
+}
 
 // Is our cache dir writeable
 if (!is_writable($base_dir.'/cache'))
