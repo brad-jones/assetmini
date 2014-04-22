@@ -19,8 +19,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 	
 	public function register()
 	{
-		$this->app->singleton('asset', function()
+		$this->app->singleton('asset', function($app)
 		{
+			\Gears\AssetMini\HtmlHelper::$debug = $app['config']->get('*::app.debug');
 			return new \Gears\AssetMini\HtmlHelper();
 		});
 	}
