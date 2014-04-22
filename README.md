@@ -88,6 +88,22 @@ Asset::js(['file1','file2','file3','etc']);
 
 **Also note that the cache folders will need to be writebale by PHP.**
 
+Laravel Integration
+--------------------------------------------------------------------------------
+I have now included a ServiceProvider and Facade for Laravel.
+All you need to do in your Laravel project is require assetmini as above.
+And then add the following to your main ```config/app.php``` file.
+
+```php
+// Add to the providers array 
+'Gears\AssetMini\Laravel\ServiceProvider'
+```
+
+```php
+// Add to the aliases array
+'AssetMini' => 'Gears\AssetMini\Laravel\Facade'
+```
+
 Making Contributions
 --------------------------------------------------------------------------------
 This project is first and foremost a tool to help me create awsome websites.
