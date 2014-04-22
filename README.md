@@ -1,5 +1,7 @@
-AssetMini - PHP based js and css asset minification.
+AssetMini
 ================================================================================
+**PHP based js and css asset minification.**
+
 This project is all about making your JS and CSS assets mini.
 Yes there are plenty others out there that do a similar sort of thing.
 How do we differ, what features do we offer:
