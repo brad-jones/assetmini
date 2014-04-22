@@ -21,8 +21,9 @@ do
 {
 	if(file_exists($dir.'/vendor/autoload.php'))
 	{
-		require($dir'/autoload.php');
+		require($dir.'/vendor/autoload.php');
 		$composer_loaded = true;
+		break;
 	}
 }
 while($dir = realpath("$dir/.."));
