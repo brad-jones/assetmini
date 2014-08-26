@@ -87,11 +87,12 @@ if (Gears\String\Contains($query, '.less'))
 	exit;
 }
 
-// Extract the json portion
-$json_string = Gears\String\Between($query, 'cache/', '.min');
+// Extract the asset name portion
+$asset_name_string = Gears\String\Between($query, 'cache/', '.min');
+$asset_name_array = explode('-', $asset_name_string);
 
 // Attempt to parse it
-if (($files = json_decode($json_string, true)) !== null)
+if (count($asset_name_array) == 2)
 {
 	// This is what we will output
 	$output = '';
@@ -101,16 +102,14 @@ if (($files = json_decode($json_string, true)) !== null)
 	$type = $type['extension'];
 	
 	// Get the time - this helps us invalidate the cache
-	$time = array_pop($files);
+	$time = $asset_name_array[1];
 	
 	// Create the hash name
-	$hash_name = '[';
-	foreach ($files as $file) $hash_name .= '"'.$file.'",';
-	$hash_name = substr($hash_name, 0, -1).']';
+	$hash_name = $asset_name_array[0];
 	
 	// Create some file names
-	$group_hash = $base_dir.'/cache/'.$hash_name.'.hash';
-	$group_min = $base_dir.'/cache/'.$json_string.'.min.'.$type;
+	$group_hash = $base_dir.'/cache/'.$hash_name.'.json';
+	$group_min = $base_dir.'/cache/'.$asset_name_string.'.min.'.$type;
 	$group_gz = $group_min.'.gz';
 	
 	// What is the function name we will use to minify this asset
@@ -128,26 +127,25 @@ if (($files = json_decode($json_string, true)) !== null)
 		// Clean up any old builds
 		foreach(scandir($base_dir.'/cache') as $file)
 		{
-			if (strpos($file, substr($hash_name, 0, -1)) !== false)
+			if (strpos($file, $hash_name.'-') !== false)
 			{
 				unlink($base_dir.'/cache/'.$file);
 			}
 		}
 		
 		// This will contain a list of hashes for each file we minify.
-		$hashes = array();
+		$hashes = [];
+
+		// Read in the hash file
+		$files = json_decode(file_get_contents($group_hash), true);
+		$current_hash_time = array_pop($files);
+		$current_group_hash = array_pop($files);
 		
 		// Loop through the files that make up this group
-		foreach ($files as $file)
+		foreach ($files as $file => $hash)
 		{
-			// Replace any dots in the file name with directory separators
-			$file = str_replace('.', DIRECTORY_SEPARATOR, $file);
-			
 			// Create the full asset file name
-			$assetfilename = $base_dir.'/'.$type.'/'.$file.'.'.$type;
-			
-			// It's possible the file exists as a LESS file
-			$assetfilename_less = str_replace('.css', '.less', $assetfilename);
+			$assetfilename = $file;
 			
 			// Does it exist
 			if (file_exists($assetfilename))
@@ -157,33 +155,31 @@ if (($files = json_decode($json_string, true)) !== null)
 				
 				// Grab the hash
 				$hashes[$assetfilename] = md5($data);
-				
-				// Minify it
-				$output .= $mini($data);
-			}
-			elseif(file_exists($assetfilename_less))
-			{
-				// Read the file
-				$data = file_get_contents($assetfilename_less);
-				
-				// Grab the hash
-				$hashes[$assetfilename_less] = md5($data);
-				
-				// Work out the basedir that the actual less file is in.
-				$less_base = pathinfo($assetfilename_less);
-				$less_base = $less_base['dirname'];
-				
-				// Compile the less first
-				$less = Gears\AssetMini\LessCompile($data, $less_base);
-				
-				// Loop through the imported files and add them to our hashes
-				foreach ($less['imported-files'] as $imported)
+
+				// Is it a less file
+				if (Gears\String\Contains($assetfilename, '.less'))
 				{
-					$hashes[$imported] = md5(file_get_contents($imported));
+					// Work out the basedir that the actual less file is in.
+					$less_base = pathinfo($assetfilename);
+					$less_base = $less_base['dirname'];
+					
+					// Compile the less first
+					$less = Gears\AssetMini\LessCompile($data, $less_base);
+					
+					// Loop through the imported files and add them to our hashes
+					foreach ($less['imported-files'] as $imported)
+					{
+						$hashes[$imported] = md5(file_get_contents($imported));
+					}
+					
+					// Minify it
+					$output .= $mini($less['css']);
 				}
-				
-				// Minify it
-				$output .= $mini($less['css']);
+				else
+				{
+					// Minify it
+					$output .= $mini($data);
+				}
 			}
 			else
 			{
@@ -205,6 +201,7 @@ if (($files = json_decode($json_string, true)) !== null)
 		
 		// Create a hash file so we can easily detect
 		// when the cache is no longer valid
+		$hashes[] = $current_group_hash; $hashes[] = $current_hash_time;
 		file_put_contents($group_hash, json_encode($hashes));
 		
 		// Make sure all files have the same time
@@ -245,5 +242,5 @@ if (($files = json_decode($json_string, true)) !== null)
 else
 {
 	header("HTTP/1.1 500 Internal Server Error");
-	echo 'Invalid Query: bad json';
+	echo 'Invalid Query: asset name';
 }

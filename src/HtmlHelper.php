@@ -15,29 +15,110 @@ namespace Gears\AssetMini;
 
 class HtmlHelper
 {
-	public static $debug = false;
+	private static $debug = false;
 	
 	private static $baseurl = null;
 	
 	private static $basepath = null;
 	
 	private static $rewritebase = null;
-	
-	private static function general($type, $files, $link_builder)
+
+	public static function setDebug($value)
 	{
-		// Work out the full url to our assets.
+		if (is_bool($value))
+		{
+			self::$debug = (bool) $value;
+		}
+	}
+
+	public static function setBaseUrl($value)
+	{
+		self::$baseurl = $value;
+	}
+
+	public static function setBasePath($value)
+	{
+		self::$basepath = $value;
+	}
+
+	public static function css()
+	{
+		// Grab the arguments
+		$args = func_get_args();
+
+		// Do we have a name
+		if (is_string($args[0]))
+		{
+			$name = $args[0];
+			$files = $args[1];
+		}
+		else
+		{
+			$name = false;
+			$files = $args[0];
+		}
+
+		// Call the general method
+		self::general
+		(
+			'css',
+			$name,
+			$files,
+			function($url)
+			{
+				return '<link rel="stylesheet" href=\''.$url.'\' />';
+			}
+		);
+	}
+	
+	public static function js()
+	{
+		// Grab the arguments
+		$args = func_get_args();
+
+		// Do we have a name
+		if (is_string($args[0]))
+		{
+			$name = $args[0];
+			$files = $args[1];
+		}
+		else
+		{
+			$name = false;
+			$files = $args[0];
+		}
+
+		// Call the general method
+		self::general
+		(
+			'js',
+			$name,
+			$files,
+			function($url)
+			{
+				return '<script src=\''.$url.'\'></script>';
+			}
+		);
+	}
+
+	private static function general($type, $group_name, $files, $link_builder)
+	{
+		// If the baseurl has not been set lets attempt to work it out
 		if (self::$baseurl == null)
 		{
+			// Work out the full url to our assets.
 			$info = pathinfo($_SERVER['SCRIPT_NAME']);
+			if (substr($info['dirname'], -1) == '/') $info['dirname'] = substr($info['dirname'], 0, -1);
 			self::$baseurl = 'http'.(isset($_SERVER['HTTPS'])?'s':'').'://'.$_SERVER['HTTP_HOST'].$info['dirname'].'/assets';
 			
 			// Also set the rewrite base
 			self::$rewritebase = $info['dirname'].'/assets/';
 		}
 		
-		// Work out the basepath to our assets
+		// If the basepath has not been set lets attempt to work it out
 		if (self::$basepath == null)
 		{
+			// Work out the basepath to our assets
 			$info = pathinfo($_SERVER['SCRIPT_FILENAME']);
 			self::$basepath = $info['dirname'].'/assets';
 			
@@ -70,15 +151,19 @@ class HtmlHelper
 			}
 		}
 		
+		// Replace dot notation with directory seperators
+		$tmp = $files; $files = [];
+		foreach ($tmp as $file)
+		{
+			$files[] = str_replace('.', DIRECTORY_SEPARATOR, $file);
+		}
+
 		// Are we in debug mode?
 		if (self::$debug)
 		{
 			// Just output the individual files
 			foreach ($files as $file)
 			{
-				// Replace the dots in the filename
-				$file = str_replace('.', '/', $file);
-				
 				// Check for any less assets
 				if (file_exists(self::$basepath.'/css/'.$file.'.less'))
 				{
@@ -95,72 +180,105 @@ class HtmlHelper
 		}
 		else
 		{
-			// Create the hash name
-			$hash_name = '[';
-			foreach ($files as $file) $hash_name .= '"'.$file.'",';
-			$hash_name = substr($hash_name, 0, -1).']';
-			
-			// Create the hash file name
-			$hashfile = self::$basepath.'/cache/'.$hash_name.'.hash';
-			
-			// Has the group already been built?
-			if (file_exists($hashfile))
+			// Create the group hash
+			$group_hash = md5(json_encode($files));
+
+			// Set the group name
+			if (!$group_name)
 			{
-				// Do the hashes match the current files
-				$hashes = json_decode(file_get_contents($hashfile));
-				foreach ($hashes as $src => $hash)
-				{
-					if (md5(file_get_contents($src)) != $hash)
-					{
-						// Something changed lets invalidate the
-						// client side and server side cache.
-						$time = time(); break;
-					}
-				}
-				
-				// Nothing changed so lets use the time from the current cache.
-				if (!isset($time)) $time = filemtime($hashfile);
+				$group_name = $group_hash;
 			}
 			else
 			{
-				// The group hasn't been built yet.
-				$time = time();
+				$group_name = str_replace('-','_', $group_name);
 			}
 			
-			// Add the time to the files array
-			$files[] = $time;
+			// Create the group hash filename
+			$hashfile = self::$basepath.'/cache/'.$group_name.'.json';
+
+			// Has the group already been built?
+			if (file_exists($hashfile))
+			{
+				// Read in the current set of hashes
+				$current_hashes = json_decode(file_get_contents($hashfile), true);
+
+				// Remove the time from the hashes array
+				$hash_time = array_pop($current_hashes);
+
+				// Remove the group hash from the hashes array
+				$current_group_hash = array_pop($current_hashes);
+
+				// Have our assets changed since last time
+				if ($group_hash != $current_group_hash)
+				{
+					// Something changed lets invalidate the
+					// client side and server side cache.
+					$time = time();
+				}
+				else
+				{
+					// The group hasn't changed but the members might have
+					foreach ($current_hashes as $src => $hash)
+					{
+						if (md5(file_get_contents($src)) != $hash)
+						{
+							// Something changed lets invalidate the
+							// client side and server side cache.
+							$time = time(); break;
+						}
+					}
+				}
+			}
+			else
+			{
+				// Its a brand new asset
+				$time = time();
+			}
+
+			// Check for the time variable
+			if (isset($time))
+			{
+				// Lets build a new hashes array
+				$new_hashes = [];
+				foreach ($files as $file)
+				{
+					// Create the full file path
+					$filepath = self::$basepath.'/'.$type.'/'.$file.'.'.$type;
+
+					// Check for any less assets
+					$lesspath = str_replace('.css', '.less', $filepath);
+					if (!file_exists($filepath) && file_exists($lesspath))
+					{
+						$filepath = $lesspath;
+					}
+
+					// Create the hash entry
+					$new_hashes[$filepath] = md5(file_get_contents($filepath));
+				}
+
+				// Add the group hash
+				$new_hashes[] = $group_hash;
+				
+				// Add the build time to the hashes array
+				$new_hashes[] = $time;
+
+				// Save the new hash file
+				file_put_contents($hashfile, json_encode($new_hashes));
+			}
+			else
+			{
+				// Nothing changed so lets use the time from the current cache.
+				$time = $hash_time;
+			}
+			
+			// Create the asset name
+			$asset_name = $group_name.'-'.$time;
 			
 			// Build the url to the minified assets
-			$url = self::$baseurl.'/cache/'.json_encode($files).'.min.'.$type;
+			$url = self::$baseurl.'/cache/'.$asset_name.'.min.'.$type;
 			
 			// Output the minified link for the group
 			echo $link_builder($url);
 		}
-	}
-	
-	public static function css($files)
-	{
-		self::general
-		(
-			'css',
-			$files,
-			function($url)
-			{
-				return '<link rel="stylesheet" href=\''.$url.'\' />';
-			}
-		);
-	}
-	
-	public static function js($files)
-	{
-		self::general
-		(
-			'js',
-			$files,
-			function($url)
-			{
-				return '<script src=\''.$url.'\'></script>';
-			}
-		);
 	}
 }
