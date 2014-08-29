@@ -12,7 +12,8 @@
 		"gears/string": "*",
 		"tedivm/jshrink": "*",
 		"natxet/CssMin": "*",
-		"oyejorge/less.php": "*"
+		"oyejorge/less.php": "*",
+		"leafo/scssphp": "*"
 	},
 	"autoload":
 	{
