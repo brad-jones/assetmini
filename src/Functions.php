@@ -34,3 +34,15 @@ function LessCompile($input, $import_dir)
 		'imported-files' => $parser->allParsedFiles()
 	);
 }
+
+function SassCompile($input, $import_dir)
+{
+	$scss = new \Leafo\ScssPhp\Compiler();
+	$scss->setNumberPrecision(10);
+	$scss->setImportPaths($import_dir);
+	return array
+	(
+		'css' => $scss->compile($input),
+		'imported-files' => $scss->getParsedFiles()
+	);
+}

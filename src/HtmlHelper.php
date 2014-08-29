@@ -280,22 +280,34 @@ class HtmlHelper
 			// Just output the individual files
 			foreach ($files as $file)
 			{
-				// Check for any less assets
-				if (file_exists(self::$basepath.'/css/'.$file.'.less'))
+				if ($type == 'css')
 				{
-					$url = self::$baseurl.'/less/'.$file.'.less?stopcache='.time();
+					// Check for any less assets
+					if (file_exists(self::$basepath.'/css/'.$file.'.less'))
+					{
+						$url = self::$baseurl.'/less/'.$file.'.less?stopcache='.time();
+					}
+
+					// Check for any sass assets
+					elseif (file_exists(self::$basepath.'/css/'.$file.'.scss'))
+					{
+						$url = self::$baseurl.'/sass/'.$file.'.scss?stopcache='.time();
+					}
 				}
 
-				// Check for any pre minified assets
-				elseif (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
+				if (!isset($url))
 				{
-					$url = self::$baseurl.'/'.$type.'/'.$file.'.min.'.$type.'?stopcache='.time();
-				}
+					// Check for any pre minified assets
+					if (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
+					{
+						$url = self::$baseurl.'/'.$type.'/'.$file.'.min.'.$type.'?stopcache='.time();
+					}
 
-				// The normal case
-				else
-				{
-					$url = self::$baseurl.'/'.$type.'/'.$file.'.'.$type.'?stopcache='.time();
+					// The normal case
+					else
+					{
+						$url = self::$baseurl.'/'.$type.'/'.$file.'.'.$type.'?stopcache='.time();
+					}
 				}
 				
 				// Output the HTML
@@ -366,22 +378,34 @@ class HtmlHelper
 				$new_hashes = [];
 				foreach ($files as $file)
 				{
-					// Check for any less assets
-					if (file_exists(self::$basepath.'/css/'.$file.'.less'))
+					if ($type == 'css')
 					{
-						$filepath = self::$basepath.'/css/'.$file.'.less';
+						// Check for any less assets
+						if (file_exists(self::$basepath.'/css/'.$file.'.less'))
+						{
+							$filepath = self::$basepath.'/css/'.$file.'.less';
+						}
+
+						// Check for any sass assets
+						elseif (file_exists(self::$basepath.'/css/'.$file.'.scss'))
+						{
+							$filepath = self::$basepath.'/css/'.$file.'.scss';
+						}
 					}
 
-					// Check for any pre minified assets
-					elseif (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
+					if (!isset($filepath))
 					{
-						$filepath = self::$basepath.'/'.$type.'/'.$file.'.min.'.$type;
-					}
+						// Check for any pre minified assets
+						if (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
+						{
+							$filepath = self::$basepath.'/'.$type.'/'.$file.'.min.'.$type;
+						}
 
-					// The normal case
-					else
-					{
-						$filepath = self::$basepath.'/'.$type.'/'.$file.'.'.$type;
+						// The normal case
+						else
+						{
+							$filepath = self::$basepath.'/'.$type.'/'.$file.'.'.$type;
+						}
 					}
 
 					// Create the hash entry

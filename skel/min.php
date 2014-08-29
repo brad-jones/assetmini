@@ -87,6 +87,37 @@ if (Gears\String\Contains($query, '.less'))
 	exit;
 }
 
+if (Gears\String\Contains($query, '.scss'))
+{
+	// Extract the filename portion
+	$sass_file = $base_dir.'/css/'.Gears\String\Between($query, 'sass/', '&');
+	
+	// Work out the basedir that the actual less file is in.
+	$sass_base = pathinfo($sass_file);
+	$sass_base = $sass_base['dirname'];
+	
+	// Does it exist
+	if (file_exists($sass_file))
+	{
+		// Read in the file
+		$data = file_get_contents($sass_file);
+		
+		// Compile the less first
+		$sass = Gears\AssetMini\SassCompile($data, $sass_base);
+		
+		// Output the less
+		header('Content-type: text/css;');
+		echo $sass['css'];
+	}
+	else
+	{
+		// It doesn't so error out
+		header("HTTP/1.1 500 Internal Server Error");
+		echo 'Asset Does Not Exist: '.$sass_file;
+	}
+	exit;
+}
+
 // Extract the asset name portion
 $asset_name_string = Gears\String\Between($query, 'cache/', '.min');
 $asset_name_array = explode('-', $asset_name_string);
@@ -174,6 +205,26 @@ if (count($asset_name_array) == 2)
 					
 					// Minify it
 					$output .= $mini($less['css'])."\n\n";
+				}
+
+				// Is it a sass file
+				elseif (Gears\String\Contains($assetfilename, '.scss'))
+				{
+					// Work out the basedir that the actual sass file is in.
+					$sass_base = pathinfo($assetfilename);
+					$sass_base = $sass_base['dirname'];
+					
+					// Compile the less first
+					$sass = Gears\AssetMini\SassCompile($data, $sass_base);
+					
+					// Loop through the imported files and add them to our hashes
+					foreach ($sass['imported-files'] as $imported)
+					{
+						$hashes[$imported] = md5(file_get_contents($imported));
+					}
+					
+					// Minify it
+					$output .= $mini($sass['css'])."\n\n";
 				}
 
 				// Is it already minified
