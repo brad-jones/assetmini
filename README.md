@@ -13,8 +13,7 @@ How do we differ, what features do we offer:
   - It will then cache this output so that NGINX or Apache can then serve
     the output directly without having to ever touch PHP.
     
-  - If the view helper class is used then we will automatically
-    invalidate the cache if need be.
+  - The view helper class will automatically invalidate the cache if need be.
 
   - It can also parse LESS files, so you can use
     variables and other cool stuff in your css.
@@ -80,13 +79,13 @@ appropriate re-writes then you can use the view helper like so:
 
 ```
 require('vendor/autoload.php');
-use Gears\AssetMini\HtmlHelper as Asset;
-Asset::$debug = true;
-Asset::css(['file1','file2','file3','etc']);
-Asset::js(['file1','file2','file3','etc']);
+use Gears\AssetMini\HtmlHelper as AssetMini;
+AssetMini::setDebug(true);
+AssetMini::css(['file1','file2','file3','etc']);
+AssetMini::js(['file1','file2','file3','etc']);
 ```
 
-**Also note that the cache folders will need to be writebale by PHP.**
+**Also note that the cache folders will need to be writable by PHP.**
 
 Laravel Integration
 --------------------------------------------------------------------------------
@@ -106,21 +105,14 @@ And then add the following to your main ```config/app.php``` file.
 
 Making Contributions
 --------------------------------------------------------------------------------
-This project is first and foremost a tool to help me create awsome websites.
+This project is first and foremost a tool to help me create awesome websites.
 Thus naturally I am going to tailor for my use. I am just one of those really
 kind people that have decided to share my code so I feel warm and fuzzy inside.
 Thats what Open Source is all about, right :)
 
-If you feel like you have some awsome new feature, or have found a bug I have
+If you feel like you have some awesome new feature, or have found a bug I have
 overlooked I would be more than happy to hear from you. Simply create a new
-issue on the github project, including a link to a patch file if you have some
-changes already developed and I will consider your request.
-
-  - If it does not impede on my use of the software.
-  - If I feel it will benefit myself and/or the greater community.
-  - If you make it easy for me to implement - ie: provide a patch file.
-  
-Then the chances are I will include your code.
+issue on the github project and optionally send me a pull request.
 
 --------------------------------------------------------------------------------
 Developed by Brad Jones - brad@bjc.id.au
