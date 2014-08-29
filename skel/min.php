@@ -173,12 +173,20 @@ if (count($asset_name_array) == 2)
 					}
 					
 					// Minify it
-					$output .= $mini($less['css']);
+					$output .= $mini($less['css'])."\n\n";
+				}
+
+				// Is it already minified
+				elseif (Gears\String\Contains($assetfilename, '.min.'))
+				{
+					// Simply concatenate it to our build.
+					// We don't need to minify this, it's already been done.
+					$output .= $data."\n\n";
 				}
 				else
 				{
 					// Minify it
-					$output .= $mini($data);
+					$output .= $mini($data)."\n\n";
 				}
 			}
 			else
