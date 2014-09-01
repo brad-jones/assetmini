@@ -50,71 +50,52 @@ $query = urldecode($_SERVER['QUERY_STRING']);
 /*
  * This is a slightly special case. When the view helpers are in debug mode
  * they will output the script or stylesheet tags for each individual file.
- * However with Less stylehsheets they need to be turned into CSS first.
+ * However with Less/Sass stylehsheets they need to be turned into CSS first.
  * Thus if we get a request for /less/FILE_NAME.less?stopcache=1234567890
  * We will compile the less on the fly, not cache it, and not minify it.
  * But note that the request must go to /less/, if it were to go to /css/
  * the file would exist and the web server would serve it as is.
  */
-if (Gears\String\Contains($query, '.less'))
+if (Gears\String\Contains($query, 'less'))
 {
 	// Extract the filename portion
-	$less_file = $base_dir.'/css/'.Gears\String\Between($query, 'less/', '&');
-	
-	// Work out the basedir that the actual less file is in.
-	$less_base = pathinfo($less_file);
-	$less_base = $less_base['dirname'];
-	
-	// Does it exist
-	if (file_exists($less_file))
-	{
-		// Read in the file
-		$data = file_get_contents($less_file);
-		
-		// Compile the less first
-		$less = Gears\AssetMini\LessCompile($data, $less_base);
-		
-		// Output the less
-		header('Content-type: text/css;');
-		echo $less['css'];
-	}
-	else
-	{
-		// It doesn't so error out
-		header("HTTP/1.1 500 Internal Server Error");
-		echo 'Asset Does Not Exist: '.$less_file;
-	}
-	exit;
+	$special_css = $base_dir.'/css/'.Gears\String\Between($query, 'less/', '&');
+	$special_css_type = 'Less';
+}
+elseif (Gears\String\Contains($query, 'sass'))
+{
+	// Extract the filename portion
+	$special_css = $base_dir.'/css/'.Gears\String\Between($query, 'sass/', '&');
+	$special_css_type = 'Sass';
 }
 
-if (Gears\String\Contains($query, '.scss'))
+if (isset($special_css))
 {
-	// Extract the filename portion
-	$sass_file = $base_dir.'/css/'.Gears\String\Between($query, 'sass/', '&');
-	
-	// Work out the basedir that the actual less file is in.
-	$sass_base = pathinfo($sass_file);
-	$sass_base = $sass_base['dirname'];
-	
-	// Does it exist
-	if (file_exists($sass_file))
+	// Does the file actually exist
+	if (file_exists($special_css))
 	{
-		// Read in the file
-		$data = file_get_contents($sass_file);
+		// Grab the contents of the file
+		$special_css_data = file_get_contents($special_css);
+
+		// Grab the base dir of the file
+		$special_css_base = pathinfo($special_css, PATHINFO_DIRNAME);
+
+		// Compile the special css
+		$compile = 'Gears\AssetMini\\'.$special_css_type.'Compile';
+		$css = $compile($special_css_data, $special_css_base);
 		
-		// Compile the less first
-		$sass = Gears\AssetMini\SassCompile($data, $sass_base);
-		
-		// Output the less
+		// Output the compiled css
 		header('Content-type: text/css;');
-		echo $sass['css'];
+		echo $css['css'];
 	}
 	else
 	{
 		// It doesn't so error out
 		header("HTTP/1.1 500 Internal Server Error");
-		echo 'Asset Does Not Exist: '.$sass_file;
+		echo 'Asset Does Not Exist: '.$special_css;
 	}
+
+	// Stop here
 	exit;
 }
 
