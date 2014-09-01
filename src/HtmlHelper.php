@@ -242,7 +242,6 @@ class HtmlHelper
 			$htaccess = self::$basepath.'/.htaccess';
 			if (file_exists($htaccess) && is_writable($htaccess))
 			{
-				
 				// Grab the content of the file
 				$lines = file($htaccess);
 				
@@ -280,6 +279,7 @@ class HtmlHelper
 			// Just output the individual files
 			foreach ($files as $file)
 			{
+				// Special case for less and sass
 				if ($type == 'css')
 				{
 					// Check for any less assets
@@ -356,7 +356,11 @@ class HtmlHelper
 					// The group hasn't changed but the members might have
 					foreach ($current_hashes as $src => $hash)
 					{
-						if (md5(file_get_contents($src)) != $hash)
+						// Build the full path to the asset
+						$filepath = self::$basepath.'/'.$src;
+
+						// Compare the 2 hashes
+						if (md5(file_get_contents($filepath)) != $hash)
 						{
 							// Something changed lets invalidate the
 							// client side and server side cache.
@@ -383,39 +387,42 @@ class HtmlHelper
 						// Check for any less assets
 						if (file_exists(self::$basepath.'/css/'.$file.'.less'))
 						{
-							$filepath = self::$basepath.'/css/'.$file.'.less';
+							$relative_path = 'css/'.$file.'.less';
 						}
 
 						// Check for any sass assets
 						elseif (file_exists(self::$basepath.'/css/'.$file.'.scss'))
 						{
-							$filepath = self::$basepath.'/css/'.$file.'.scss';
+							$relative_path = 'css/'.$file.'.scss';
 						}
 					}
 
-					if (!isset($filepath))
+					if (!isset($relative_path))
 					{
 						// Check for any pre minified assets
 						if (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
 						{
-							$filepath = self::$basepath.'/'.$type.'/'.$file.'.min.'.$type;
+							$relative_path = $type.'/'.$file.'.min.'.$type;
 						}
 
 						// The normal case
 						else
 						{
-							$filepath = self::$basepath.'/'.$type.'/'.$file.'.'.$type;
+							$relative_path = $type.'/'.$file.'.'.$type;
 						}
 					}
+
+					// Create the full filepath
+					$filepath = self::$basepath.'/'.$relative_path;
 
 					// Create the hash entry
 					if (file_exists($filepath))
 					{
-						$new_hashes[$filepath] = md5(file_get_contents($filepath));
+						$new_hashes[$relative_path] = md5(file_get_contents($filepath));
 					}
 					else
 					{
-						$new_hashes[$filepath] = null;
+						$new_hashes[$relative_path] = null;
 					}
 				}
 

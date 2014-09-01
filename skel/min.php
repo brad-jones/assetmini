@@ -165,6 +165,8 @@ if (count($asset_name_array) == 2)
 		}
 		
 		// This will contain a list of hashes for each file we minify.
+		// We recreate the hash file now because some assets may import other
+		// assets, in the case of less and sass.
 		$hashes = [];
 
 		// Read in the hash file
@@ -176,8 +178,8 @@ if (count($asset_name_array) == 2)
 		foreach ($files as $file => $hash)
 		{
 			// Create the full asset file name
-			$assetfilename = $file;
-			
+			$assetfilename = $base_dir.'/'.$file;
+
 			// Does it exist
 			if (file_exists($assetfilename))
 			{
@@ -185,7 +187,7 @@ if (count($asset_name_array) == 2)
 				$data = file_get_contents($assetfilename);
 				
 				// Grab the hash
-				$hashes[$assetfilename] = md5($data);
+				$hashes[$file] = md5($data);
 
 				// Is it a less file
 				if (Gears\String\Contains($assetfilename, '.less'))
@@ -200,7 +202,9 @@ if (count($asset_name_array) == 2)
 					// Loop through the imported files and add them to our hashes
 					foreach ($less['imported-files'] as $imported)
 					{
-						$hashes[$imported] = md5(file_get_contents($imported));
+						// Make sure the filepath is relative
+						$relative = str_replace($base_dir.'/', '', $imported);
+						$hashes[$relative] = md5(file_get_contents($imported));
 					}
 					
 					// Minify it
@@ -220,7 +224,8 @@ if (count($asset_name_array) == 2)
 					// Loop through the imported files and add them to our hashes
 					foreach ($sass['imported-files'] as $imported)
 					{
-						$hashes[$imported] = md5(file_get_contents($imported));
+						$relative = str_replace($base_dir.'/', '', $imported);
+						$hashes[$relative] = md5(file_get_contents($imported));
 					}
 					
 					// Minify it
@@ -262,11 +267,6 @@ if (count($asset_name_array) == 2)
 		// when the cache is no longer valid
 		$hashes[] = $current_group_hash; $hashes[] = $current_hash_time;
 		file_put_contents($group_hash, json_encode($hashes));
-		
-		// Make sure all files have the same time
-		touch($group_hash, $time);
-		touch($group_min, $time);
-		touch($group_gz, $time);
 	}
 	else
 	{
