@@ -15,7 +15,7 @@ How do we differ, what features do we offer:
     
   - The view helper class will automatically invalidate the cache if need be.
 
-  - It can also parse LESS files, so you can use
+  - It can also parse LESS/SASS files, so you can use
     variables and other cool stuff in your css.
     **IT EVEN COMPILES TWITTER BOOTSTRAP ON THE FLY FOR YOU**
     
@@ -29,7 +29,7 @@ How to Install
 --------------------------------------------------------------------------------
 Installation via composer is easy:
 
-	composer require gears/assetmini:x
+	composer require gears/assetmini:*
 
 How do I use it?
 --------------------------------------------------------------------------------
@@ -46,6 +46,11 @@ following to your ```composer.json``` file. Note this is just an example.
 	"assetmini-dir": "./public/assets"
 }
 ```
+
+*The assets folder however you create it should
+look like the 'skel' folder of this project.*
+
+**Also note that the cache folder will need to be writable by PHP.**
 
 Apache should work out of the box. This is done by the inclusion of a .htaccess
 file. If using the view helper this will even update the .htaccess file to have
@@ -72,7 +77,7 @@ location ~* \.(css|js)$
 
 This block will catch any minified css or js requests. We use the try_files to
 test for an already minified version, if this does not exist we will get php to
-make it for us. **Make sure you point nginx to correct location of min.php**
+make it for us. **Make sure you point nginx to the correct location of min.php**
 
 Once your PHP server is setup and working with the
 appropriate re-writes then you can use the view helper like so:
@@ -85,7 +90,75 @@ AssetMini::css(['file1','file2','file3','etc']);
 AssetMini::js(['file1','file2','file3','etc']);
 ```
 
-**Also note that the cache folders will need to be writable by PHP.**
+Manually Setting Paths
+--------------------------------------------------------------------------------
+For most setups AssetMini will hopefully guess the base url and path for your
+project but if not you may need to do this yourself.
+
+To set the base url:
+```php
+AssetMini::setBaseUrl('http://example.org/custom/path/to/assets');
+```
+
+To set the base path:
+```php
+AssetMini::setBasePath('/var/www/vhosts/example_org/custom/path/to/assets');
+```
+*A few things to note:*
+
+  - Your are now responsible for the http/https detection.
+  - You must also now ensure that the htaccess RewriteBase is set correctly.
+  - In both cases ensure there is no trailing slash.
+  - You can not do one without the other.
+
+Dot Notation Folder/File Names
+--------------------------------------------------------------------------------
+First up I will say if you are familiar with Laravel this works basically the
+same as specifying a View name. I could ramble on here for a while but I feel
+like it's easier to show with an example.
+
+Lets say your assets folder looks like this:
+
+```
+/assets
+	/js
+		/jquery
+			/plugins
+				/googlemaps.js
+			/migrate.js
+			/jquery.js
+		/modernizr.js
+```
+
+To load those assets the php would be:
+
+```php
+AssetMini::js
+([
+	'modernizr',
+	'jquery.jquery',
+	'jquery.migrate',
+	'jquery.plugins.googlemaps'
+]);
+```
+
+Pre Minified Assets
+--------------------------------------------------------------------------------
+Now if you have used some sort of minfication before you are probably all to
+familar with the situation where it works fine unminified but the second you
+minify your code it all breaks and fails.
+
+No 2 minification programs are made the same while one might work and the
+other won't on the same source code. I do really like AssetMini thats for sure
+but I am the first to admit sometimes even we can't get it right.
+
+*Anyway I didn't write the minfication code, you can thank Robert Hafner and
+Joe Scylla for that... and send them all the bugs hahaha :)*
+
+Back on topic. To get around this issue you can provide a pre minified asset.
+Just make sure the filename contains '.min.' and we will bypass the minification
+process. We still combine the file with any other assets and also gzip compress
+it.
 
 Laravel Integration
 --------------------------------------------------------------------------------
