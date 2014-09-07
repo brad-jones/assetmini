@@ -279,6 +279,8 @@ class HtmlHelper
 			// Just output the individual files
 			foreach ($files as $file)
 			{
+				$url = null;
+
 				// Special case for less and sass
 				if ($type == 'css')
 				{
@@ -295,7 +297,7 @@ class HtmlHelper
 					}
 				}
 
-				if (!isset($url))
+				if (empty($url))
 				{
 					// Check for any pre minified assets
 					if (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
@@ -309,7 +311,7 @@ class HtmlHelper
 						$url = self::$baseurl.'/'.$type.'/'.$file.'.'.$type.'?stopcache='.time();
 					}
 				}
-				
+
 				// Output the HTML
 				echo $link_builder($url);
 			}
@@ -382,6 +384,8 @@ class HtmlHelper
 				$new_hashes = [];
 				foreach ($files as $file)
 				{
+					$relative_path = null;
+
 					if ($type == 'css')
 					{
 						// Check for any less assets
@@ -397,7 +401,7 @@ class HtmlHelper
 						}
 					}
 
-					if (!isset($relative_path))
+					if (empty($relative_path))
 					{
 						// Check for any pre minified assets
 						if (file_exists(self::$basepath.'/'.$type.'/'.$file.'.min.'.$type))
