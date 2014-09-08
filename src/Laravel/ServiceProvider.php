@@ -21,7 +21,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 	{
 		$this->app->singleton('asset', function($app)
 		{
-			\Gears\AssetMini\HtmlHelper::$debug = $app['config']->get('*::app.debug');
+			\Gears\AssetMini\HtmlHelper::setDebug($app['config']->get('*::app.debug'));
 			return new \Gears\AssetMini\HtmlHelper();
 		});
 	}
