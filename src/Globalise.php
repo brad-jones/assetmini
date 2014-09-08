@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Not sure if this is consider a big no no or not, I am still sitting on the
+ * Not sure if this is considered a big no no or not, I am still sitting on the
  * fence about it. But basically all we are doing is checking to see if
  * the class AssetMini doesn't already exist globally and that we are not being
  * run inisde of a Laravel App (as we have the laravel service provider and

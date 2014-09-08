@@ -84,11 +84,27 @@ appropriate re-writes then you can use the view helper like so:
 
 ```
 require('vendor/autoload.php');
-use Gears\AssetMini\HtmlHelper as AssetMini;
 AssetMini::setDebug(true);
 AssetMini::css(['file1','file2','file3','etc']);
 AssetMini::js(['file1','file2','file3','etc']);
 ```
+
+**A note about the AssetMini scope.**
+Composer will load a file called ```Globalise.php```, all this does is checks
+to see if a class called ```\AssetMini``` already exists in the global scope.
+If not it uses the ```class_alias``` function to alias the
+```\Gears\AssetMini\HtmlHelper``` class to ```\AssetMini```.
+
+This means that you no longer have to place the
+following in each php script you need to use AssetMini:
+
+```php
+use Gears\AssetMini\HtmlHelper as AssetMini;
+```
+
+I am in two minds about this functionality and open to peoples thoughts.
+If you think this is stupidly silly let me know...
+
 
 Manually Setting Paths
 --------------------------------------------------------------------------------
