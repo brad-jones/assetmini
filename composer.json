@@ -23,7 +23,8 @@
 		},
 		"files":
 		[
-			"src/Functions.php"
+			"src/Functions.php",
+			"src/Globalise.php"
 		]
 	}
 }
