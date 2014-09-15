@@ -1,4 +1,4 @@
-<?php
+<?php namespace Gears\AssetMini\Laravel;
 ////////////////////////////////////////////////////////////////////////////////
 //            _____                        __     _____   __        __          
 //           /  _  \   ______ ______ _____/  |_  /     \ |__| ____ |__|         
@@ -10,8 +10,6 @@
 //          Designed and Developed by Brad Jones <brad @="bjc.id.au" />         
 // -----------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
-
-namespace Gears\AssetMini\Laravel;
 
 class Facade extends \Illuminate\Support\Facades\Facade
 {

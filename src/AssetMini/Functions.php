@@ -1,4 +1,4 @@
-<?php
+<?php namespace Gears\AssetMini;
 ////////////////////////////////////////////////////////////////////////////////
 //            _____                        __     _____   __        __          
 //           /  _  \   ______ ______ _____/  |_  /     \ |__| ____ |__|         
@@ -11,24 +11,36 @@
 // -----------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Not sure if this is considered a big no no or not, I am still sitting on the
- * fence about it. But basically all we are doing is checking to see if
- * the class AssetMini doesn't already exist globally and that we are not being
- * run inisde of a Laravel App (as we have the laravel service provider and
- * facade to this job).
- * 
- * If both of those conditions are met then we alias the
- * HtmlHelper class so that it makes things nice and concise.
- * 
- * So instead of doing this:
- * 
- *     use Gears\AssetMini\HtmlHelper as AssetMini;
- * 
- * You just get AssetMini automatically.
- */
-
-if (!class_exists('\AssetMini') && !defined('LARAVEL_START'))
+function JsMin($input)
 {
-	class_alias('\Gears\AssetMini\HtmlHelper', '\AssetMini');
+	return \JShrink\Minifier::minify($input);
+}
+
+function CssMin($input)
+{
+	return \CssMin::minify($input);
+}
+
+function LessCompile($input, $import_dir)
+{
+	$parser = new \Less_Parser();
+	$parser->SetImportDirs(array($import_dir => ''));
+	$parser->parse($input);
+	return array
+	(
+		'css' => $parser->getCss(),
+		'imported-files' => $parser->allParsedFiles()
+	);
+}
+
+function SassCompile($input, $import_dir)
+{
+	$scss = new \Leafo\ScssPhp\Compiler();
+	$scss->setNumberPrecision(10);
+	$scss->setImportPaths($import_dir);
+	return array
+	(
+		'css' => $scss->compile($input),
+		'imported-files' => $scss->getParsedFiles()
+	);
 }

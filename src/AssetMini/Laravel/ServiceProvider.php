@@ -1,4 +1,4 @@
-<?php
+<?php namespace Gears\AssetMini\Laravel;
 ////////////////////////////////////////////////////////////////////////////////
 //            _____                        __     _____   __        __          
 //           /  _  \   ______ ______ _____/  |_  /     \ |__| ____ |__|         
@@ -11,38 +11,16 @@
 // -----------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace Gears\AssetMini;
-
-function JsMin($input)
+class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
-	return \JShrink\Minifier::minify($input);
-}
-
-function CssMin($input)
-{
-	return \CssMin::minify($input);
-}
-
-function LessCompile($input, $import_dir)
-{
-	$parser = new \Less_Parser();
-	$parser->SetImportDirs(array($import_dir => ''));
-	$parser->parse($input);
-	return array
-	(
-		'css' => $parser->getCss(),
-		'imported-files' => $parser->allParsedFiles()
-	);
-}
-
-function SassCompile($input, $import_dir)
-{
-	$scss = new \Leafo\ScssPhp\Compiler();
-	$scss->setNumberPrecision(10);
-	$scss->setImportPaths($import_dir);
-	return array
-	(
-		'css' => $scss->compile($input),
-		'imported-files' => $scss->getParsedFiles()
-	);
+	protected $defer = false;
+	
+	public function register()
+	{
+		$this->app->singleton('asset', function($app)
+		{
+			\Gears\AssetMini::setDebug($app['config']->get('*::app.debug'));
+			return new \Gears\AssetMini();
+		});
+	}
 }

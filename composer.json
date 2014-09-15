@@ -19,12 +19,11 @@
 	{
 		"psr-4":
 		{
-			"Gears\\AssetMini\\": "src/"
+			"Gears\\": "src/"
 		},
 		"files":
 		[
-			"src/Functions.php",
-			"src/Globalise.php"
+			"src/AssetMini/Functions.php"
 		]
 	}
 }
