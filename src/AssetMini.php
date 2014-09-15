@@ -20,6 +20,41 @@ class AssetMini
 	private static $rewritebase = null;
 
 	/**
+	 * Method: globalise
+	 * =========================================================================
+	 * So basically instead of having to write ```Gears\AssetMini``` everywhere
+	 * you can call this once and we will create a class alias to just *Asset*.
+	 * 
+	 * For example this code might go in a bootstrap / front controller:
+	 * 
+	 *     Gears\AssetMini::globalise();
+	 * 
+	 * And then this code could go into your views:
+	 * 
+	 *     Asset::css(['bootstrap', 'custom', 'etc']);
+	 * 
+	 * Parameters:
+	 * -------------------------------------------------------------------------
+	 * n/a
+	 * 
+	 * Returns:
+	 * -------------------------------------------------------------------------
+	 * void
+	 */
+	public static function globalise()
+	{
+		if (!class_exists('\Asset'))
+		{
+			if (!class_alias('\Gears\AssetMini', '\Asset'))
+			{
+				throw new \Exception('We failed to globalise!');
+			}
+		}
+
+		throw new \Exception('The class `Asset` already exists globally!');
+	}
+
+	/**
 	 * Method: setDebug
 	 * =========================================================================
 	 * This sets the debug mode. We default debug mode to false.
@@ -102,7 +137,7 @@ class AssetMini
 	 * 
 	 * Usage might look like:
 	 * 
-	 * Gears\AssetMini\HtmlHelper::css(['bootstrap.bootstrap', 'mystyles']);
+	 * Gears\AssetMini::css(['bootstrap.bootstrap', 'mystyles']);
 	 * 
 	 * This will output something like:
 	 * 
@@ -155,7 +190,7 @@ class AssetMini
 	 * 
 	 * Usage might look like:
 	 * 
-	 * Gears\AssetMini\HtmlHelper::js(['utils.modernizr', 'jquery']);
+	 * Gears\AssetMini::js(['utils.modernizr', 'jquery']);
 	 * 
 	 * This will output something like:
 	 * 
