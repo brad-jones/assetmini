@@ -49,6 +49,10 @@ class AssetMini
 			{
 				throw new \Exception('We failed to globalise!');
 			}
+			else
+			{
+				return;
+			}
 		}
 
 		throw new \Exception('The class `Asset` already exists globally!');
