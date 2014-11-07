@@ -1,4 +1,4 @@
-AssetMini
+AssetMini - now deprecated see: https://github.com/phpgearbox/asset
 ================================================================================
 **PHP based js and css asset minification.**
 
